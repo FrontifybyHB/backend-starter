@@ -4,12 +4,7 @@ import userService from "../services/userServices.js";
 import { sendVerificationEmail } from "../utils/sendEmail.js";
 import AppError from "../utils/appError.js";
 
-/**
- * Auth Controller
- * ---------------
- * Safe, production-ready
- * Uses next() via asyncHandler
- */
+
 
 const authController = {
     /**

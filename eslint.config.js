@@ -10,6 +10,13 @@ export default [
     plugins: {
       import: eslintPluginImport,
     },
+    settings: {
+      'import/resolver': {
+        node: {
+          extensions: ['.js', '.json'],
+        },
+      },
+    },
     rules: {
       'no-unused-vars': 'warn',
       'no-console': 'warn',

@@ -2,7 +2,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import config from "../config/config.js";
 import userService from "../services/userServices.js";
 import { sendVerificationEmail } from "../utils/sendEmail.js";
-import AppError from "../utils/appError.js";
+import appError from "../utils/appError.js";
 
 
 
@@ -10,7 +10,7 @@ const authController = {
     /**
      * Register user
      */
-    register: asyncHandler(async (req, res, next) => {
+    register: asyncHandler(async (req, res) => {
         const user = await userService.register(req.body);
 
         const accessToken = userService.generateAccessToken({
@@ -50,7 +50,7 @@ const authController = {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            return next(new AppError("Email and password are required", 400));
+            return next(appError("Email and password are required", 400));
         }
 
         const user = await userService.login(email, password);
@@ -89,13 +89,13 @@ const authController = {
      */
     getMe: asyncHandler(async (req, res, next) => {
         if (!req.user) {
-            return next(new AppError("Unauthorized", 401));
+            return next(appError("Unauthorized", 401));
         }
 
         const user = await userService.getMe(req.user._id);
 
         if (!user) {
-            return next(new AppError("User not found", 404));
+            return next(appError("User not found", 404));
         }
 
         res.status(200).json({
@@ -116,11 +116,11 @@ const authController = {
         } else if (req.body.refreshToken) {
             refreshToken = req.body.refreshToken;
         } else {
-            return next(new AppError("Refresh token is required", 401));
+            return next(appError("Refresh token is required", 401));
         }
 
         if (!refreshToken) {
-            return next(new AppError("Refresh token is required", 401));
+            return next(appError("Refresh token is required", 401));
         }
 
         const decoded = userService.verifyRefreshToken(refreshToken);
@@ -138,7 +138,7 @@ const authController = {
     /**
      * Logout (stateless)
      */
-    logout: asyncHandler(async (req, res, next) => {
+    logout: asyncHandler(async (req, res) => {
         res.clearCookie("refreshToken");
         res.clearCookie("accessToken");
         res.status(200).json({
@@ -154,7 +154,7 @@ const authController = {
         const { email } = req.body;
 
         if (!email) {
-            return next(new AppError("Email is required", 400));
+            return next(appError("Email is required", 400));
         }
 
         const token = await userService.generateVerificationToken(email);
@@ -179,7 +179,7 @@ const authController = {
         const { token } = req.query;
 
         if (!token) {
-            return next(new AppError("Token is required", 400));
+            return next(appError("Token is required", 400));
         }
 
         const user = await userService.verifyEmail(token);

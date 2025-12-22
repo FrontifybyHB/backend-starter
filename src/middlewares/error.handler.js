@@ -1,9 +1,8 @@
 import logger from "../loggers/winston.logger.js";
 import config from "../config/config.js";
 
-const errorHandler = (err, req, res, next) => {
+const errorHandler = (err, req, res) => {
     const statusCode = err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
 
     const nodeEnv = config.NODE_ENV;
 

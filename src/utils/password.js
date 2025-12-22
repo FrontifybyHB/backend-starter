@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import appError from './appError.js'
+import appError from './appError.js';
 
 const saltRounds = 12;
 

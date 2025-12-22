@@ -2,7 +2,8 @@ import asyncHandler from "../utils/asyncHandler.js";
 import config from "../config/config.js";
 import userService from "../services/userServices.js";
 import { sendVerificationEmail } from "../utils/sendEmail.js";
-import appError from "../utils/appError.js";
+import appError from '../utils/appError.js';
+
 
 
 

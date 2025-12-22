@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 
 import userDAO from "../dao/user.dao.js";
-import appError from "../utils/appError.js";
+import appError from '../utils/appError.js';
 import config from "../config/config.js";
 import {hashPassword, comparePassword} from '../utils/password.js'
 import * as CONSTANT from "../constants/constants.js";

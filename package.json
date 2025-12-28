@@ -1,6 +1,6 @@
 {
-  "name": "create-frontify-backend",
-  "version": "1.3.0",
+  "name": "express-backend-kit",
+  "version": "1.4.0",
   "description": "",
   "main": "server.js",
   "scripts": {

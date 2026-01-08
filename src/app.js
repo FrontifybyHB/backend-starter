@@ -38,7 +38,7 @@ app.get('/', (req, res) => {
         status: 'success',
         message: 'Welcome to the Backend Starter',
         environment: config.NODE_ENV,
-        documentation: 'docs.testdog.in',
+        documentation: 'https://backend-starter-hb.netlify.app/',
     });
 });
 

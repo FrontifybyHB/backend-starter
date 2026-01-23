@@ -62,7 +62,7 @@ Get your project running in 3 easy steps.
 Open your terminal and run the following command (replace `my-api-project` with your desired project name):
 
 ```bash
-npx backend-starter "my-api-project"
+npx backend-starter-hb "my-api-project"
 ```
 
 ### 2. Navigate to the Folder

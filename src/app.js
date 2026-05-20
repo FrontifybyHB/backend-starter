@@ -1,57 +1,49 @@
-import express from 'express';
+/**
+ * Express App
+ * Purpose: Configure middleware, routing, and terminal error handling for the API.
+ */
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import express from 'express';
 import helmet from 'helmet';
-import cookieParser from 'cookie-parser'
-import { generalRateLimiter } from './middlewares/rateLimiter.middleware.js'
-import morganLogger from './loggers/morgan.logger.js'
-import config from './config/config.js'
+import hpp from 'hpp';
+import mongoSanitize from 'express-mongo-sanitize';
+import morgan from 'morgan';
+
+import config from './config/config.js';
+import { rateLimiter } from './middlewares/rateLimiter.middleware.js';
+import errorHandler from './middlewares/error.middleware.js';
+import notFoundHandler from './middlewares/notFound.middleware.js';
+import routes from './routes/index.js';
+import logger from './utils/logger.js';
 
 const app = express();
 
-app.use(
-    cors(
-        {
-            origin: config.FRONTEND_URL,
-            credentials: true,
-        }
-    ));
-app.use(morganLogger);
 app.use(helmet());
-app.use(express.json({ limit: '100kb' }));
-app.use(express.urlencoded({ extended: true, limit: '100kb' }));
+app.use(cors({ origin: config.cors.origin, credentials: true }));
+app.use('/api', rateLimiter);
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
+app.use(hpp());
+app.use(mongoSanitize());
+app.use(morgan('combined', { stream: logger.stream }));
 
-app.use(generalRateLimiter)
-
-// import routes
-import authRoutes from "./routes/auth.routes.js";
-import errorHandler from './middlewares/error.handler.js'
-
-// Auth Routes
-app.use('/api/v1/auth', authRoutes)
-
-
-
-// // Simple route for checking server status
-app.get('/', (req, res) => {
-    res.status(200).json({
-        status: 'success',
-        message: 'Welcome to the Backend Starter',
-        environment: config.NODE_ENV,
-        documentation: 'https://backend-starter-hb.netlify.app/',
-    });
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    statusCode: 200,
+    message: 'Healthy',
+    data: {
+      uptime: process.uptime(),
+      environment: config.nodeEnv,
+    },
+  });
 });
 
-// // 404 route handler for undefined routes
-app.all('*name', (req, res, next) => {
-    const err = new Error(`Can't find ${req.originalUrl} on this server!`);
-    err.statusCode = 404;
-    err.status = 'fail';
-    next(err);
-});
+app.use('/api/v1', routes);
 
-app.use(errorHandler)
-
-
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 export default app;

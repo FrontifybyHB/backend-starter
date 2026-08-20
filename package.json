@@ -1,40 +1,52 @@
 {
-  "name": "backend-starter",
-  "version": "1.4.0",
-  "description": "",
+  "name": "backend-starter-hb",
+  "version": "2.0.0",
+  "description": "Production-grade Node.js Express MongoDB backend starter with auth, Redis cache, and BullMQ email jobs.",
+  "type": "module",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "start-watch": "node --inspect --watch-path=./ ./server.js",
     "dev": "nodemon server.js",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch"
   },
-  "keywords": [],
+  "keywords": [
+    "backend",
+    "express",
+    "mongodb",
+    "starter",
+    "bullmq"
+  ],
   "author": "",
   "license": "ISC",
-  "type": "module",
   "dependencies": {
     "bcrypt": "^6.0.0",
-    "bcryptjs": "^3.0.3",
+    "bullmq": "^5.34.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "eslint-plugin-import": "^2.32.0",
-    "express": "^5.2.1",
+    "express": "^4.21.2",
+    "express-mongo-sanitize": "^2.2.0",
     "express-rate-limit": "^8.2.1",
-    "express-validator": "^7.3.1",
     "helmet": "^8.1.0",
+    "hpp": "^0.2.3",
+    "ioredis": "^5.8.2",
+    "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.0.1",
+    "mongoose": "^8.20.1",
     "morgan": "^1.10.1",
-    "nodemailer": "^7.0.11",
+    "node-cache": "^5.1.2",
+    "nodemailer": "^8.0.7",
     "winston": "^3.19.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "eslint": "^9.39.2",
+    "eslint-plugin-import": "^2.32.0",
     "globals": "^16.5.0",
-    "nodemon": "^3.1.11"
+    "jest": "^30.2.0",
+    "nodemon": "^3.1.11",
+    "supertest": "^7.1.4"
   }
 }

@@ -4,11 +4,27 @@ import eslintPluginImport from 'eslint-plugin-import';
 
 export default [
   {
-    files: ["**/*.{js,mjs,cjs}"],
+    ignores: ['node_modules/**', 'logs/**', 'coverage/**'],
+  },
+  {
+    files: ['eslint.config.mjs'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
-      globals: globals.browser
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
+  {
+    files: ['**/*.{js,mjs}'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        ...globals.node,
+        ...globals.jest,
+      }, 
     },
     plugins: {
       js,
@@ -23,7 +39,7 @@ export default [
     },
     rules: {
       ...js.configs.recommended.rules,
-      'no-unused-vars': 'warn',
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
       'no-console': 'warn',
       'import/order': [
         'warn',

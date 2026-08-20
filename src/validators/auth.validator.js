@@ -1,99 +1,116 @@
-import { body, query } from 'express-validator';
-import { customValidators } from '../middlewares/validator.middleware.js';
+/**
+ * Auth Validator
+ * Purpose: Validate and sanitize authentication request input with Joi.
+ */
+import Joi from 'joi';
 
-export const registerValidator = [
-    body('username')
-        .optional({ nullable: true })
-        .isLength({ min: 3, max: 30 })
-        .withMessage('Username must be between 3 and 30 characters')
-        .matches(/^[a-zA-Z0-9_]+$/)
-        .withMessage('Username can only contain letters, numbers, and underscores')
-        .trim()
-        .escape(),
-    body('name')
-        .optional()
-        .isLength({ min: 2, max: 50 })
-        .withMessage('Name must be between 2 and 50 characters')
-        .trim(),
-    body('email')
-        .notEmpty()
-        .withMessage('Email is required')
-        .isEmail()
-        .withMessage('Please provide a valid email')
-        .normalizeEmail(),
-    body('password')
-        .notEmpty()
-        .withMessage('Password is required')
-        .isLength({ min: 8 })
-        .withMessage('Password must be at least 8 characters')
-        .custom((value) => {
-            if (!customValidators.strongPassword(value)) {
-                throw new Error(
-                    'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
-                );
-            }
-            return true;
-        }),
-];
+import ApiResponse from '../utils/ApiResponse.js';
 
-export const loginValidator = [
-    body('email')
-        .notEmpty()
-        .withMessage('Email is required')
-        .isEmail()
-        .withMessage('Please provide a valid email')
-        .normalizeEmail(),
-    body('password')
-        .notEmpty()
-        .withMessage('Password is required')
-        .isLength({ min: 8 })
-        .withMessage('Password must be at least 8 characters'),
-];
+const joiOptions = {
+  abortEarly: false,
+  stripUnknown: true,
+};
 
-export const verifyEmailValidator = [
-    body('email')
-        .notEmpty()
-        .withMessage('Email is required')
-        .isEmail()
-        .withMessage('Please provide a valid email')
-        .normalizeEmail(),
-];
+const strongPassword = Joi.string()
+  .trim()
+  .min(8)
+  .max(128)
+  .pattern(/[A-Z]/, 'uppercase letter')
+  .pattern(/[a-z]/, 'lowercase letter')
+  .pattern(/[0-9]/, 'number')
+  .pattern(/[^A-Za-z0-9]/, 'special character')
+  .required()
+  .messages({
+    'string.min': 'Password must be at least 8 characters',
+    'string.max': 'Password must be at most 128 characters',
+    'string.pattern.name': 'Password must include at least one {#name}',
+    'any.required': 'Password is required',
+  });
 
-export const verifyEmailTokenValidator = [
-    query('token').notEmpty().withMessage('Token is required'),
-];
+export const registerSchema = Joi.object({
+  username: Joi.string()
+    .trim()
+    .min(3)
+    .max(30)
+    .pattern(/^[A-Za-z0-9_]+$/)
+    .required()
+    .messages({
+      'string.min': 'Username must be at least 3 characters',
+      'string.max': 'Username must be at most 30 characters',
+      'string.pattern.base': 'Username can only include letters, numbers, and underscores',
+      'any.required': 'Username is required',
+    }),
+  name: Joi.string().trim().min(2).max(80).required().messages({
+    'string.min': 'Name must be at least 2 characters',
+    'string.max': 'Name must be at most 80 characters',
+    'any.required': 'Name is required',
+  }),
+  email: Joi.string().trim().lowercase().email().max(254).required().messages({
+    'string.email': 'Email must be valid',
+    'string.max': 'Email must be at most 254 characters',
+    'any.required': 'Email is required',
+  }),
+  password: strongPassword,
+});
 
-export const forgotPasswordValidator = [
-    body('email')
-        .notEmpty()
-        .withMessage('Email is required')
-        .isEmail()
-        .withMessage('Please provide a valid email')
-        .normalizeEmail(),
-];
+export const loginSchema = Joi.object({
+  email: Joi.string().trim().lowercase().email().max(254).required().messages({
+    'string.email': 'Email must be valid',
+    'string.max': 'Email must be at most 254 characters',
+    'any.required': 'Email is required',
+  }),
+  password: Joi.string().trim().min(8).max(128).required().messages({
+    'string.min': 'Password must be at least 8 characters',
+    'string.max': 'Password must be at most 128 characters',
+    'any.required': 'Password is required',
+  }),
+});
 
-export const resetPasswordValidator = [
-    body('token').notEmpty().withMessage('Token is required'),
-    body('password')
-        .notEmpty()
-        .withMessage('Password is required')
-        .isLength({ min: 8 })
-        .withMessage('Password must be at least 8 characters')
-        .custom((value) => {
-            if (!customValidators.strongPassword(value)) {
-                throw new Error(
-                    'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
-                );
-            }
-            return true;
-        }),
-    body('confirmPassword')
-        .notEmpty()
-        .withMessage('Confirm password is required')
-        .custom((value, { req }) => {
-            if (value !== req.body.password) {
-                throw new Error('Passwords do not match');
-            }
-            return true;
-        }),
-];
+export const forgotPasswordSchema = Joi.object({
+  email: Joi.string().trim().lowercase().email().max(254).required().messages({
+    'string.email': 'Email must be valid',
+    'string.max': 'Email must be at most 254 characters',
+    'any.required': 'Email is required',
+  }),
+});
+
+export const resetPasswordSchema = Joi.object({
+  token: Joi.string().trim().min(32).max(256).required().messages({
+    'string.min': 'Token is required',
+    'string.max': 'Token must be at most 256 characters',
+    'any.required': 'Token is required',
+  }),
+  password: strongPassword,
+});
+
+export const verifyEmailSchema = Joi.object({
+  email: Joi.string().trim().lowercase().email().max(254).required().messages({
+    'string.email': 'Email must be valid',
+    'string.max': 'Email must be at most 254 characters',
+    'any.required': 'Email is required',
+  }),
+});
+
+export const verifyEmailTokenSchema = Joi.object({
+  token: Joi.string().trim().min(32).max(256).required().messages({
+    'string.min': 'Token is required',
+    'string.max': 'Token must be at most 256 characters',
+    'any.required': 'Token is required',
+  }),
+});
+
+export const validate = (schema, source = 'body') => (req, res, next) => {
+  const { error, value } = schema.validate(req[source], joiOptions);
+
+  if (error) {
+    const errors = error.details.map((detail) => ({
+      field: detail.path.join('.'),
+      message: detail.message.replaceAll('"', ''),
+    }));
+    const message = errors.map((detail) => detail.message).join(', ');
+    return ApiResponse.error(res, message, 400, errors);
+  }
+
+  req[source] = value;
+  return next();
+};

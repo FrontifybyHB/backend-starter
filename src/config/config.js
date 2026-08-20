@@ -1,24 +1,74 @@
+/**
+ * Application Config
+ * Purpose: Load and validate all environment-backed application settings.
+ */
 import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
-const _config = {
-    NODE_ENV: process.env.NODE_ENV || 'development',
-    PORT: process.env.PORT || 3000,
-    WEB_URL: process.env.WEB_URL || 'https://yourdomain.com',
-    FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
-    DB_URL: process.env.DB_URL || 'mongodb://localhost:27017/mydatabase',
-    JWT_SECRET: process.env.JWT_SECRET,
-    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-    GOOGLE_REFRESH_TOKEN: process.env.GOOGLE_REFRESH_TOKEN,
-    GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
-    GMAIL_USER: process.env.GMAIL_USER,
-    EMAIL_HOST: process.env.EMAIL_HOST,
-    EMAIL_PORT: process.env.EMAIL_PORT,
-    EMAIL_USER: process.env.EMAIL_USER,
-    EMAIL_PASSWORD: process.env.EMAIL_PASSWORD,
+const required = [
+  'PORT',
+  'MONGO_URI',
+  'JWT_ACCESS_SECRET',
+  'JWT_REFRESH_SECRET',
+  'REDIS_URL',
+  'CORS_ORIGIN',
+];
+
+required.forEach((key) => {
+  if (!process.env[key]) {
+    throw new Error(`FATAL: Missing required environment variable: ${key}`);
+  }
+});
+
+const parseInteger = (value, fallback) => {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? fallback : parsed;
 };
 
+const parseBoolean = (value, fallback = false) => {
+  if (value === undefined) return fallback;
+  return ['true', '1', 'yes'].includes(String(value).toLowerCase());
+};
 
-export default _config;
+const config = {
+  port: parseInteger(process.env.PORT, 5000),
+  nodeEnv: process.env.NODE_ENV || 'development',
+  webUrl: process.env.WEB_URL || 'http://localhost:3000',
+  mongo: {
+    uri: process.env.MONGO_URI,
+  },
+  jwt: {
+    accessSecret: process.env.JWT_ACCESS_SECRET,
+    refreshSecret: process.env.JWT_REFRESH_SECRET,
+    accessExpiresIn: process.env.JWT_ACCESS_EXPIRES || '15m',
+    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES || '7d',
+    refreshTtlSeconds: parseInteger(process.env.JWT_REFRESH_TTL_SECONDS, 7 * 24 * 60 * 60),
+  },
+  redis: {
+    url: process.env.REDIS_URL,
+  },
+  cors: {
+    origin: process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim()),
+  },
+  cookie: {
+    secure: parseBoolean(process.env.COOKIE_SECURE, process.env.NODE_ENV === 'production'),
+    sameSite: process.env.COOKIE_SAME_SITE || 'strict',
+  },
+  email: {
+    from: process.env.EMAIL_FROM || 'Backend Starter <no-reply@example.com>',
+    host: process.env.EMAIL_HOST,
+    port: parseInteger(process.env.EMAIL_PORT, 587),
+    secure: parseBoolean(process.env.EMAIL_SECURE, false),
+    user: process.env.EMAIL_USER,
+    password: process.env.EMAIL_PASSWORD,
+    queueEnabled: parseBoolean(process.env.EMAIL_QUEUE_ENABLED, true),
+  },
+  rateLimit: {
+    globalMax: parseInteger(process.env.RATE_LIMIT_GLOBAL_MAX, 200),
+    authMax: parseInteger(process.env.RATE_LIMIT_AUTH_MAX, 10),
+    passwordMax: parseInteger(process.env.RATE_LIMIT_PASSWORD_MAX, 3),
+  },
+};
+
+export default config;

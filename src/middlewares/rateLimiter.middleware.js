@@ -1,31 +1,34 @@
-// middleware/rateLimiter.js
-import rateLimit from "express-rate-limit";
+/**
+ * Rate Limiter Middleware
+ * Purpose: Provide global, auth, and password reset rate limiting tiers.
+ */
+import rateLimit from 'express-rate-limit';
 
-export const generalRateLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // max 100 requests per IP
-    standardHeaders: true,
-    legacyHeaders: false,
+import config from '../config/config.js';
+import ApiResponse from '../utils/ApiResponse.js';
 
-    handler: (req, res) => {
-        res.status(429).json({
-            success: false,
-            message: "Too many requests. Please try again later.",
-        });
-    },
+const createLimiter = ({ windowMs, max, message }) => rateLimit({
+  windowMs,
+  max,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => ApiResponse.error(res, message, 429),
 });
 
-export const authRateLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // only 10 login attempts
-    standardHeaders: true,
-    legacyHeaders: false,
+export const rateLimiter = createLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: config.rateLimit.globalMax,
+  message: 'Too many requests. Please try again later.',
+});
 
-    handler: (req, res) => {
-        res.status(429).json({
-            success: false,
-            message:
-                "Too many login attempts. Please try again after some time.",
-        });
-    },
+export const authRateLimiter = createLimiter({
+  windowMs: 60 * 60 * 1000,
+  max: config.rateLimit.authMax,
+  message: 'Too many auth attempts. Please try again later.',
+});
+
+export const passwordRateLimiter = createLimiter({
+  windowMs: 60 * 60 * 1000,
+  max: config.rateLimit.passwordMax,
+  message: 'Too many password reset attempts. Please try again later.',
 });

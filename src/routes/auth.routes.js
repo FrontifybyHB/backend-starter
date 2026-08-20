@@ -1,68 +1,40 @@
-import express from "express";
+/**
+ * Auth Routes
+ * Purpose: Compose authentication dependencies and wire route middleware.
+ */
+import express from 'express';
 
-import authController from "../controllers/auth.controller.js";
-import { protect } from "../middlewares/auth.middleware.js";
-import { authRateLimiter} from '../middlewares/rateLimiter.middleware.js'
-import { validate } from "../middlewares/validator.middleware.js";
-import { 
-    registerValidator, 
-    loginValidator, 
-    verifyEmailValidator, 
-    verifyEmailTokenValidator 
-} from '../validators/auth.validator.js'
-
+import UserModel from '../models/user.model.js';
+import AuthController from '../controllers/auth.controller.js';
+import { verifyAccessToken } from '../middlewares/auth.middleware.js';
+import { authRateLimiter, passwordRateLimiter } from '../middlewares/rateLimiter.middleware.js';
+import AuthRepository from '../repositories/auth.repository.js';
+import AuthService from '../services/auth.service.js';
+import cache from '../utils/cache.js';
+import {
+  forgotPasswordSchema,
+  loginSchema,
+  registerSchema,
+  resetPasswordSchema,
+  validate,
+  verifyEmailSchema,
+  verifyEmailTokenSchema,
+} from '../validators/auth.validator.js';
 
 const router = express.Router();
 
-router.use(authRateLimiter)
+const repo = new AuthRepository(UserModel);
+const service = new AuthService(repo, cache);
+const controller = new AuthController(service);
 
-// Register user
-router.post(
-    "/register",
-    validate(registerValidator),
-    authController.register
-);
-
-// Login user
-router.post(
-    "/login",
-    validate(loginValidator),
-    authController.login
-);
-
-// Logout user (stateless)
-router.post(
-    "/logout",
-    protect,
-    authController.logout
-);
-
-// Get current user
-router.get(
-    "/get-me",
-    protect,
-    authController.getMe
-);
-
-// Generate new access token
-router.post(
-    "/refresh-token",
-    authController.refreshAccessToken
-);
-
-
-// Send verification email
-router.post(
-    "/verify-email",
-    validate(verifyEmailValidator),
-    authController.verifyEmail
-);
-
-// Verify email using token
-router.get(
-    "/verify-email",
-    validate(verifyEmailTokenValidator),
-    authController.verifyEmailToken
-);
+router.post('/register', authRateLimiter, validate(registerSchema), controller.register);
+router.post('/login', authRateLimiter, validate(loginSchema), controller.login);
+router.post('/refresh', authRateLimiter, controller.refresh);
+router.post('/logout', authRateLimiter, controller.logout);
+router.get('/me', verifyAccessToken, controller.getMe);
+router.post('/forgot-password', passwordRateLimiter, validate(forgotPasswordSchema), controller.forgotPassword);
+router.post('/reset-password', passwordRateLimiter, validate(resetPasswordSchema), controller.resetPassword);
+router.post('/verify-email', authRateLimiter, validate(verifyEmailSchema), controller.sendVerification);
+router.post('/verify-email/confirm', authRateLimiter, validate(verifyEmailTokenSchema), controller.verifyEmail);
 
 export default router;
